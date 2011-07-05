@@ -1,0 +1,2 @@
+SpannerScan: bam -> stat histograms
+SpannerX: bam -> selected fragment bam
