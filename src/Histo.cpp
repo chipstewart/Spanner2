@@ -455,7 +455,7 @@ hist hist::expand() {
 			}
 		}
 	}
-    int N1 = 1+round((xmax - xmin) / dx1);
+    int N1 = 1+int(round((xmax - xmin) / dx1));
 	// don't collapse this guy any more than 1 bin
 	if (dx == 0) {
 		return *this;
