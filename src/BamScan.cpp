@@ -94,7 +94,7 @@ int BamScan::fetch_func(const bam1_t *b, void *data)
 	const bam1_core_t *c = &b->core;
 	int i, l, mm,c3,c5;
 	if (b->core.tid < 0) return 0;
-	for (i = l = mm = c3=c5= 0; i < c->n_cigar; ++i) {
+	for (i = l = mm = c3=c5= 0; i < int(c->n_cigar); ++i) {
 		int op = cigar[i]&0xf;
 		if (op == BAM_CMATCH || op == BAM_CDEL || op == BAM_CREF_SKIP)
 			l += cigar[i]>>4;
@@ -170,7 +170,9 @@ int BamScan::fetch_func(const bam1_t *b, void *data)
     pxs = bam_aux_get(b, "XS");
     if ((psm!=0)&(pxs!=0)) {
         q2 = bam_aux2i(pas);
-        q2 = q*double(bam_aux2i(pxs))/double(q2);
+        double q0 = (q*double(bam_aux2i(pxs))/double(q2));
+        if (q0>255) q0=255;
+        q2 = char(q0);
     }
 
     
