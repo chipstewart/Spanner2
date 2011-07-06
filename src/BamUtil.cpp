@@ -796,7 +796,7 @@ int calcReadLength(bam1_t * b)
     int i, l, mm,c3,c5;
     if (b->core.tid < 0) return 0;
     uint32_t *cigar = bam1_cigar(b);
-    for (i = l = mm = c3=c5= 0; i < b->core.n_cigar; ++i) {
+    for (i = l = mm = c3=c5= 0; i < int(b->core.n_cigar); ++i) {
         int op = cigar[i]&0xf;
         if (op == BAM_CMATCH || op == BAM_CDEL || op == BAM_CREF_SKIP)
             l += cigar[i]>>4;
