@@ -10,7 +10,8 @@ export SRC_DIR	= $(abspath ./src)
 export CXX		= g++
 export CXXFLAGS = -Wall -O2
 
-# define samtools area for sam.h and libbam.a  (edit here)
+# define samtools area for sam.h and libbam.a  
+#==============================================
 #export SAMTOOLS_DIR = /usr/local/samtools-0.1.16
 export SAMTOOLS_DIR = $(abspath ../../samtools)
 #==============================================
