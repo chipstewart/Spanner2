@@ -59,8 +59,8 @@ BamX::BamX(pars & Params1)	// optional constructor
         Params.setHist("LR",HLR);        
         H1.h.clear();  // free some memory 
         if (FragmentTailPercent>0) {
-            LFlow=HLF.p2xTrim(FragmentTailPercent/100.);   
-            LFhigh=HLF.p2xTrim(1-FragmentTailPercent/100.);   
+            LFlow=int(HLF.p2xTrim(FragmentTailPercent/100.));   
+            LFhigh=int(HLF.p2xTrim(1-FragmentTailPercent/100.));   
         }
     }
 
