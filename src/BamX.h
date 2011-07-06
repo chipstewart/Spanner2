@@ -23,7 +23,7 @@
 
 #include "UtilityFunctions.h"
 #include "Histo.h"
-#include "pars.h"
+#include "Pars.h"
 #include "FastaFile.h"
 #include "sam.h"
 #include "BamUtil.h"
