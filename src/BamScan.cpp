@@ -118,9 +118,9 @@ int BamScan::fetch_func(const bam1_t *b, void *data)
     char q= char (c->qual);
     
     if (region.limit) {
-        if (a!=region.anchor) return 1;
-        if (p<region.start) return 1;
-        if (p>region.end) return 1;        
+        if (int(a)!=region.anchor) return 1;
+        if (int(p)<region.start) return 1;
+        if (int(p)>region.end) return 1;        
     }
     
     if (len<LRmin)  return 1;
@@ -138,7 +138,7 @@ int BamScan::fetch_func(const bam1_t *b, void *data)
             md = bam_aux2Z(pmd);
             string smd=md;
             bool insert=false;
-            for (int i=0; i<smd.size(); i++) {
+            for (size_t i=0; i<smd.size(); i++) {
                 if (isdigit(smd[i])) {
                     insert=false;
                     continue;
@@ -329,7 +329,7 @@ void BamScan::extractMateMode()
 double BamScan::extractGCfromSeq(string & chrom, int pos0, int pos1)
 {
     string s= "";
-    for (int i=0; i<Reference.seqNames.size(); i++) {
+    for (size_t i=0; i<Reference.seqNames.size(); i++) {
         string s1=Reference.seqNames[i];
         size_t pos=s1.find(" ");
         if (string::npos != pos ) { 
@@ -346,8 +346,8 @@ double BamScan::extractGCfromSeq(string & chrom, int pos0, int pos1)
     if (pos0==pos1) return gc;
     if (pos0<0) return gc;
     if (pos1<1) return gc;
-    if (pos0>Reference.seq[s].size()) return gc;
-    if (pos1>Reference.seq[s].size()) return gc;
+    if (pos0>int(Reference.seq[s].size())) return gc;
+    if (pos1>int(Reference.seq[s].size())) return gc;
     gc=0;
     for (int b=pos0; b<pos1; b++) {
         if(Reference.seq[s][b]=='G'||Reference.seq[s][b]=='C') gc++;        
@@ -481,7 +481,7 @@ void BamScan::histo_print()
 {
     
     if (Histos.h.count("G1")>0) {
-        for (int b=0; b<Histos.h["G1"].n.size(); b++) {
+        for (size_t b=0; b<Histos.h["G1"].n.size(); b++) {
             double x0=Histos.h["G0"].n[b];
             double x1=Histos.h["G1"].n[b];
             double x2=Histos.h["G2"].n[b];

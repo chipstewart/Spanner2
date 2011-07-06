@@ -252,7 +252,7 @@ void pars::getCommandLineParameters(int argc, char * argv[])
     input=argv[argc-1];
     
     if (help) {
-        fprintf(stderr,"SpannerX -options <input bam file>  >  stdout  \n");
+        fprintf(stderr,"%s \n",inputoutputcmdline.c_str()); 
         fprintf(stderr,"\tVersion: %s \n",SpannerVersion);
         fprintf(stderr,"\toptions:\n");
         
@@ -269,27 +269,28 @@ void pars::getCommandLineParameters(int argc, char * argv[])
                 char v=char(long_options[o].val);
                 
                 size_t found=cmdOpt.find(v);
-                if (found==string::npos)
-                    break;
-
+                if (found==string::npos) {
+                    o++;
+                    continue;
+                }
                 
                 switch (v) {
                         
                     case 'I':
-                        fprintf(stderr,"\t-%c: --%s  :\t Illuminze pair orientation in output bam\n",long_options[o].val,long_options[o].name);
+                        fprintf(stderr,"\t-%c: --%s  :\t\t\t\t Illuminze pair orientation in output bam\n",long_options[o].val,long_options[o].name);
                         break;
                     
                     case 'S':
-                        fprintf(stderr,"\t-%c: --%s <statfile> :\t library stat file\n",long_options[o].val,long_options[o].name);
+                        fprintf(stderr,"\t-%c: --%s <statfile> :\t\t\t library stat file\n",long_options[o].val,long_options[o].name);
                         break;
                         
                     case 'P':
-                        fprintf(stderr,"\t-%c: --%s <FragmentTailPercent> :\t p-value on tails of fragment length \n",long_options[o].val,long_options[o].name);
+                        fprintf(stderr,"\t-%c: --%s <percent> :\t\t select tails of fragment length \n",long_options[o].val,long_options[o].name);
                         break;
                         
                         
                     case 'o':
-                        fprintf(stderr,"\t-%c: --%s <output area> :\t output file directory\n",long_options[o].val,long_options[o].name);
+                        fprintf(stderr,"\t-%c: --%s <output area> :\t\t output file directory\n",long_options[o].val,long_options[o].name);
                         break;
 
                     case 'l':

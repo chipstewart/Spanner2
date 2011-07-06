@@ -26,7 +26,7 @@ BamX::BamX(pars & Params1)	// optional constructor
     outUniqueUnmappedBam=false;
  
     //output file
-	samfile_t *fp;
+	//samfile_t *fp;
     bam_header_t *bam_header;
     
     string s = Params.getInput();
@@ -207,7 +207,7 @@ BamX::BamX(pars & Params1)	// optional constructor
         outputBam["FT"].close();
     */
     
-    samclose(fp);
+    samclose(Bam.fp);
     
     
 }

@@ -15,8 +15,8 @@
 int main (int argc, char * argv[])
 {        
     // options for BamX
-    string cmdOpt="mo:P:S:f:x:c:d:r:q:p:l:t:h:I";
-    string inputoutput =" <input bam file>  >  < output bam file> ";
+    string cmdOpt="mo:P:S:x:c:d:r:q:p:l:t:h:I";
+    string inputoutput ="SpannerX -o <outputdir> -options <input bam file>  >  stdout ";
     pars Params(argc,argv,cmdOpt,inputoutput);
 
     int dbg = Params.getInt("Dbg");

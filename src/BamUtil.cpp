@@ -281,7 +281,7 @@ BamContainer::BamContainer(bam1_t* b1)
             md = bam_aux2Z(pmd);
             string smd=md;
             bool insert=false;
-            for (int i=0; i<smd.size(); i++) {
+            for (size_t i=0; i<smd.size(); i++) {
                 if (isdigit(smd[i])) {
                     insert=false;
                     continue;

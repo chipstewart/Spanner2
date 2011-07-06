@@ -15,7 +15,7 @@
 int main (int argc, char * argv[])
 {        
     string cmdOpt="mf:x:c:d:r:q:p:l:t:h";
-    string inputoutput =" <input bam file>  >  < output stat file> ";
+    string inputoutput =" SpannerScan -options <input bam file>  >  <output stat file> ";
     pars Params(argc,argv,cmdOpt,inputoutput);
     //pars Params(argc,argv);
 
