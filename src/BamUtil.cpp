@@ -255,7 +255,7 @@ BamContainer::BamContainer(bam1_t* b1)
     mm=0;
     clip[0]=0;
     clip[1]=0;
-    for (int i = 0; i < c->n_cigar; ++i) {
+    for (int i = 0; i < int(c->n_cigar); ++i) {
         int op = cigar[i]&0xf;
 		if (op == BAM_CDEL || op == BAM_CREF_SKIP)
 			mm += cigar[i]>>4; 
@@ -311,7 +311,8 @@ BamContainer::BamContainer(bam1_t* b1)
     pxs = bam_aux_get(b1, "XS");
     if ((psm!=0)&(pxs!=0)) {
         q2 = bam_aux2i(pas);
-        q2 = q*double(bam_aux2i(pxs))/double(q2);
+        double xq=round(q*double(bam_aux2i(pxs))/double(q2));
+        q2 = xq>255? 255: char(xq); 
     }
     
     
