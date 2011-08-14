@@ -7,7 +7,7 @@
 //
 
 #include <iostream>
-#include "ParamBam.h"
+#include "Pars.h"
 #include "BamScan.h"
 #include "SpannerScanVersion.h"
 
