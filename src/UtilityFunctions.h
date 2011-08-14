@@ -10,8 +10,10 @@
 #define UTILTYFUNCTIONS_H
 
 #include <iostream>
+#include <istream>
 #include <ostream>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <vector>
 #include <map>
@@ -20,6 +22,7 @@
 #include <errno.h> 
 #include <dirent.h> 
 #include <sys/stat.h> 
+
 // private
 //#include "Type-Hash.h"
 
@@ -140,5 +143,22 @@ string extractBamTag(const string & line, const string & tag);
 // extract text following Bam subtag 
 //=========================================================================
 string extractBamSubTag(const string & line, const string & tag);
+
+class C_region {
+    friend ostream &operator<<(ostream &, const C_region &);
+public: 
+    C_region();
+    C_region(string &);    
+    C_region&operator=(const C_region &);
+    bool within(string &, int);
+    bool within(string &, int,int);
+    bool overlap(string &, int,int);
+    bool limit;
+    string region;    
+    string chrom;    
+    int anchor;
+    int start;
+    int end;
+};
 
 #endif

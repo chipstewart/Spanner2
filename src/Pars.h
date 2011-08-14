@@ -18,7 +18,6 @@
 #include <getopt.h>
 
 // uses
-
 #include "UtilityFunctions.h"
 #include "Histo.h"
 #include "SpannerVersion.h"

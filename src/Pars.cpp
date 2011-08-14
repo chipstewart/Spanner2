@@ -46,6 +46,7 @@ pars::pars(int argc,  char * argv[], string & cmdOpt1, string & inout1 )
     strings["StatFile"]="";
     strings["ReferenceFastaFile"]="";
     strings["ChromRegion"]="";
+    strings["TargetFile"]="";
  
     histos["LF"]=hist();
     histos["LR"]=hist();
@@ -88,6 +89,7 @@ void pars::getCommandLineParameters(int argc, char * argv[])
         {"maxmismatchpercent",     optional_argument, 0, 'p'},
         {"minreadlength",          optional_argument, 0, 'l'},
         {"technology_matemode",    optional_argument, 0, 't'},
+        {"targetfile",             optional_argument, 0, 'T'},
         {"help",                   no_argument,       0, 'h'},
         {0, 0, 0, 0}
     };
@@ -223,6 +225,12 @@ void pars::getCommandLineParameters(int argc, char * argv[])
                 xi=string2Int(xs);
                 setInt("ReadPairSenseConfig",xi);
                 break;
+
+            case 'T':
+                //fprintf(stderr,"option -T with value `%s'\n", optarg);
+                xs=optarg;
+                setString("TargetFile",xs);
+                break;
                 
             case 'h':
                 help=true;
@@ -340,6 +348,10 @@ void pars::getCommandLineParameters(int argc, char * argv[])
                         
                         break;
                         
+                    case 'T':
+                        fprintf(stderr,"\t-%c: --%s :\t\t select target regions from file \n",long_options[o].val,long_options[o].name);
+                        break;
+                    
                     case 'h':
                         fprintf(stderr,"\t-%c: --%s :\t\t\t\t\t this message \n",long_options[o].val,long_options[o].name);
                         break;

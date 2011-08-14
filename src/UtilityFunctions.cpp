@@ -237,6 +237,7 @@ int  split(vector<string>& v, const string& str,
     }
     return int(v.size());
 }
+
 //=========================================================================
 // looks at a path/file stub for a list of files with a given pattern
 //=========================================================================
@@ -458,6 +459,110 @@ string extractBamSubTag(const string & line, const string & tag)
     }
     return sout;
 }
+
+//=========================================================================
+// genomic region parsing (eg. chr1:123-456)
+//=========================================================================
+C_region::C_region() {
+    limit=false;
+    region="";    
+    chrom="";    
+    anchor=0;
+    start=0;
+    end=0;
+}
+
+C_region::C_region(string & r) {
+    limit=false;
+    region=r;
+    string coord;
+    size_t k=region.find(":");
+    if (k!=string::npos) {
+        chrom=region.substr(0,k-1);
+        coord=region.substr(k+1);
+    } else {
+        chrom=region;
+    }
+    // trim "chr" from chrom
+    k=region.find("chr");
+    if (k!=string::npos) {
+        chrom=region.substr(3);
+    }
+    // only for chr 1->22  ...  fails for everything else (depends on bam header)
+    if (isdigit(chrom[0])) {
+        anchor=atoi(chrom.c_str());
+    }
+    // pos part
+    if (coord.size()>0) { 
+        limit=true;
+        string s,e;
+        k=coord.find("-");
+        if (k!=string::npos) {
+            s=coord.substr(0,k-1);
+            e=coord.substr(k+1);
+        } else {
+            s=coord;
+            stringstream ss;
+            ss << INT_MAX;            
+            e=ss.str();
+        }
+        start=atoi(s.c_str());
+        end=atoi(e.c_str());
+    }
+}
+
+bool C_region::within(string & c1, int p1) {
+    if (chrom.compare(c1)==0) {
+        if (limit) {
+            return ( (p1>=start) &(p1<=end)) ;
+        } 
+        return true;
+    }
+    return false;
+}
+
+bool C_region::within(string & c1, int p1, int p2) {
+    if (chrom.compare(c1)==0) {
+        if (limit) {
+            bool a= (p1>=start) &(p1<=end) ;
+            bool b= (p2>=start) &(p2<=end) ;
+            return a&b;
+        } 
+        return true;
+    }
+    return false;
+}
+
+bool C_region::overlap(string & c1, int p1, int p2) {
+    if (chrom.compare(c1)==0) {
+        if (limit) {
+            bool a= (p1<=end) ;
+            bool b= (p2>=start) ;
+            return a&b;
+        } 
+        return true;
+    }
+    return false;
+}
+
+
+ostream & operator<<(ostream &output, const C_region & r1) {
+    output << r1.region << endl;
+    return output;
+}
+
+
+C_region& C_region::operator=(const C_region &rhs)
+{
+    region = rhs.region;
+    limit = rhs.limit;
+    chrom = rhs.chrom;
+    anchor = rhs.anchor;
+    start = rhs.start;
+    end = rhs.end;
+    return (*this);
+}
+
 
 
 #endif

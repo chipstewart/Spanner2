@@ -36,12 +36,7 @@ int  calcReadLength(bam1_t *);
 
 // container class to stick bam1_t allocated data into a string object
 
-typedef struct {
-    bool limit;
-    int anchor;
-    int start;
-    int end;
-} region_t;
+
 
 
 class BamContainer

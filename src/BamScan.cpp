@@ -92,12 +92,14 @@ int BamScan::fetch_func(const bam1_t *b, void *data)
 	uint32_t *cigar = bam1_cigar(b);
     uint8_t *pseq =bam1_seq(b);
 	const bam1_core_t *c = &b->core;
-	int i, l, mm,c3,c5;
+	int i, l, mm,c3,c5,ql;
 	if (b->core.tid < 0) return 0;
-	for (i = l = mm = c3=c5= 0; i < int(c->n_cigar); ++i) {
+	for (i = l = mm = c3=c5=ql= 0; i < int(c->n_cigar); ++i) {
 		int op = cigar[i]&0xf;
 		if (op == BAM_CMATCH || op == BAM_CDEL || op == BAM_CREF_SKIP)
 			l += cigar[i]>>4;
+        if (op == BAM_CMATCH || op == BAM_CDEL )
+			ql += cigar[i]>>4;
 		if (op == BAM_CDEL || op == BAM_CREF_SKIP)
 			mm += cigar[i]>>4; 
         if (op == BAM_CSOFT_CLIP & i==0)
@@ -113,6 +115,7 @@ int BamScan::fetch_func(const bam1_t *b, void *data)
     
     unsigned int p= (unsigned int) c->pos;
     unsigned short len= (unsigned short) l;
+    unsigned short querylen= (unsigned short) ql;
     unsigned short a= (unsigned short) c->tid;
     char s= (c->flag&BAM_FREVERSE)? '-' : '+';
     char q= char (c->qual);
@@ -218,7 +221,24 @@ int BamScan::fetch_func(const bam1_t *b, void *data)
         Histos.h["MM"].Fill1(r1.mm);
         Histos.h["GC"].Fill1(gc);
         Histos.h["CL"].Fill1(-c3);
-        Histos.h["CL"].Fill1(c5);        
+        Histos.h["CL"].Fill1(c5);       
+        
+        // cycle histos
+        for (int j,i=c5; i<querylen; i++) {
+            if (s=='+') {
+                j=i;
+            } else {
+                j=c->l_qseq-i;
+            }
+            Histos.h["C0"].Fill1(j);
+            int bq1=bam1_qual(b)[j];
+            Histos.h["C1"].FillW(j,double(bq1));
+            if (bq1>2) {
+                Histos.h["C2"].Fill1(j);
+            }
+            
+        }
+                
     }
     
     // mate already in Bamreads?     
@@ -464,6 +484,21 @@ void BamScan::histo_init()
     GLStats2.setTitle("G2 sigma_GC  dependence on fragment length");
     Histos.h["G2"]=GLStats2;
     
+    hist CycleStats0;
+    CycleStats0.Initialize(1001,-0.5,1000.5);   
+    CycleStats0.setTitle("C0 Cycle mapped base ");
+    Histos.h["C0"]=CycleStats0;
+
+    hist CycleStats1;
+    CycleStats1.Initialize(1001,-0.5,1000.5);   
+    CycleStats1.setTitle("C1 Cycle mapped base quality");;
+    Histos.h["C1"]=CycleStats1;
+
+    hist CycleStats2;
+    CycleStats2.Initialize(1001,-0.5,1000.5);   
+    CycleStats2.setTitle("C2 Cycle mapped base (base quality>2)");;
+    Histos.h["C2"]=CycleStats2;
+
 }
 
 void BamScan::histo_single()
