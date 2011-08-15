@@ -547,6 +547,35 @@ void BamScan::histo_print()
         }
         Histos.h["G1"].Finalize();
     }
+
+    if (Histos.h.count("C1")>0) {
+        for (size_t b=0; b<Histos.h["C1"].n.size(); b++) {
+            double x0=Histos.h["C0"].n[b];
+            double x1=Histos.h["C1"].n[b];
+            double x2=Histos.h["C2"].n[b];
+            if (x0>0) {
+                x1=x1/x0;
+                Histos.h["C1"].n[b]=x1;
+                x2=x2/x0;
+                Histos.h["C2"].n[b]=x2;
+            }
+        }
+        Histos.h["C1"].Finalize();
+        Histos.h["C2"].Finalize();
+    }
+
+    if (Histos.h.count("CQ")>0) {
+        for (size_t b=0; b<Histos.h["CQ"].n.size(); b++) {
+            double x0=Histos.h["CM"].n[b];
+            double x1=Histos.h["CQ"].n[b];
+            if (x0>0) {
+                x1=x1/x0;
+                Histos.h["CQ"].n[b]=x1;
+            }
+        }
+        Histos.h["CQ"].Finalize();
+    }
+
     
     map<string, hist, less<string> >::iterator ih;         
     for ( ih=Histos.h.begin() ; ih != Histos.h.end(); ih++ ) {
