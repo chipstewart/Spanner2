@@ -59,7 +59,7 @@ public:
     bool IlluminizeBam;
     double maxmismatchPC;
     int FragLengthWindow;
-    region_t region;
+    C_region region;
     double FragmentTailPercent;
     string outputDirectory;
     
