@@ -43,8 +43,8 @@ public:
     pars  Params;    
     BamUtil Bam;
     FastaObj Reference;
-    map<string,BamOutStream,less<string> > outputBam;
-    map<string,BamOutStream,less<string> >::iterator ioutputBam;
+    map<string,BamHeaderContainer,less<string> > outputBam;
+    map<string,BamHeaderContainer,less<string> >::iterator ioutputBam;
     int Nread;
     int Npair;
     int Nproper;

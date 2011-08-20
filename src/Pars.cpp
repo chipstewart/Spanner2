@@ -39,6 +39,8 @@ pars::pars(int argc,  char * argv[], string & cmdOpt1, string & inout1 )
     ints["Qmin"]=20;
     ints["Dbg"]=0;
     ints["Illuminize"]=1;
+    ints["SplitBracketMin"]=20;   
+    ints["SplitBaseQmin"]=20;   
     
     doubles["FragmentTailPercent"]=0.1;
     doubles["FractionMaxMisMatches"]=double(100.0);      
@@ -90,6 +92,8 @@ void pars::getCommandLineParameters(int argc, char * argv[])
         {"minreadlength",          optional_argument, 0, 'l'},
         {"technology_matemode",    optional_argument, 0, 't'},
         {"targetfile",             optional_argument, 0, 'T'},
+        {"splitbracketmin",        optional_argument, 0, 'b'},
+        {"splitbaseqmin",          optional_argument, 0, 'B'},
         {"help",                   no_argument,       0, 'h'},
         {0, 0, 0, 0}
     };
@@ -232,6 +236,18 @@ void pars::getCommandLineParameters(int argc, char * argv[])
                 setString("TargetFile",xs);
                 break;
                 
+            case 'b':
+                xs=optarg;
+                xi=string2Int(xs);
+                setInt("SpitBracketMin",xi);
+                break;
+
+            case 'B':
+                xs=optarg;
+                xi=string2Int(xs);
+                setInt("SpitBaseQmin",xi);
+                break;
+                
             case 'h':
                 help=true;
                 break;
@@ -347,6 +363,17 @@ void pars::getCommandLineParameters(int argc, char * argv[])
                         fprintf(stderr,"\t\t0: FR (IL short); 1: R1R2/F2F1 (454);  2: F1F2/R2R1 (SOLiD); 3: RF (IL long)\n");
                         
                         break;
+                        
+                    case 'b':
+                        xi=getInt("SplitBracketMin");
+                        fprintf(stderr,"\t-%c: --%s <%d> :\t\t split read bracketing length minimum\n",long_options[o].val,long_options[o].name,xi);
+                        break;
+
+                    case 'B':
+                        xi=getInt("SplitBaseQmin");
+                        fprintf(stderr,"\t-%c: --%s <%d> :\t\t split read bracketing base qual minimum\n",long_options[o].val,long_options[o].name,xi);
+                        break;
+
                         
                     case 'T':
                         fprintf(stderr,"\t-%c: --%s :\t\t select target regions from file \n",long_options[o].val,long_options[o].name);

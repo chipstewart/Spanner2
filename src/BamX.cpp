@@ -48,7 +48,8 @@ BamX::BamX(pars & Params1)	// optional constructor
     IlluminizeBam=Params.getInt("Illuminize")>0;
     outputDirectory=Params.getString("OutputDirectory");
     int minLR=Params.getInt("MinReadLength"); 
-    
+    int SplitBracketMin=Params.getInt("SplitBracketMin"); 
+    int SplitBaseQmin=Params.getInt("SplitBaseQmin"); 
     
     string StatFile=Params.getString("StatFile");
     if (StatFile.size()>0) {
@@ -82,39 +83,87 @@ BamX::BamX(pars & Params1)	// optional constructor
     // output Bams
     outputBam.clear();
     
+    /*
+    // test BamHeaderContainer
+    vector<BamHeaderContainer> x;
+    string sv=SpannerVersion;    
+    string q="@PG\tID:FragmentTail\tPN:SpannerX\tVN"+sv+"\tCL:"+Params.getCmdLine();
+    while (true) {
+        string outfile=outputDirectory+"/"+filename+".fragtail.bam";
+        q=q+"\n@PG\tID:FragmentTail\tPN:SpannerX\tVN"+sv+"\tCL:"+Params.getCmdLine();
+        BamHeaderContainer x1( bam_header, q); 
+        x.push_back(x1);
+        bam_header_t* h1=x[x.size()-1].header();
+        cout<< h1->text << endl;
+    }
+    cout << x.size() << endl;
+    */
+    
+    samfile_t *fpFT;
+    samfile_t *fpIC;
+    samfile_t *fpUM;
+    samfile_t *fpUP;
+    samfile_t *fpUZ;
+    
     if (outFragTailBam) {
         string outfile=outputDirectory+"/"+filename+".fragtail.bam";
         string sv=SpannerVersion;
         string q="@PG\tID:FragmentTail\tPN:SpannerX\tVN"+sv+"\tCL:"+Params.getCmdLine();
-        outputBam["FT"]=BamOutStream(outfile, q , bam_header);  
+        outputBam["FT"]=BamHeaderContainer(bam_header,q); 
+        bam_header_t* h1=outputBam["FT"].header();
+        if ((fpFT = samopen(outfile.c_str(), "wb", h1)) == 0) {
+            fprintf(stderr, "samopen: Fail to open output BAM file %s\n", filename.c_str());
+            exit(161);
+        }
     }
      
     if (outInterChromBam) {
         string outfile=outputDirectory+"/"+filename+".interchrom.bam";
         string sv=SpannerVersion;
         string q="@PG\tID:InterChromPairs\tPN:SpannerX\tVN"+sv+"\tCL:"+Params.getCmdLine();
-        outputBam["IC"]=BamOutStream(outfile, q , bam_header);  
+        outputBam["IC"]=BamHeaderContainer(bam_header,q);   
+        bam_header_t* h1=outputBam["IC"].header();
+        if ((fpIC = samopen(outfile.c_str(), "wb", h1)) == 0) {
+            fprintf(stderr, "samopen: Fail to open output BAM file %s\n", filename.c_str());
+            exit(162);
+        }
     }
     
     if (outUniqueMultipleBam) {
         string outfile=outputDirectory+"/"+filename+".uMult.bam";
         string sv=SpannerVersion;
         string q="@PG\tID:uniqMultiplyMappedPairs\tPN:SpannerX\tVN"+sv+"\tCL:"+Params.getCmdLine();
-        outputBam["UM"]=BamOutStream(outfile, q , bam_header);  
+        outputBam["UM"]=BamHeaderContainer(bam_header,q); 
+        bam_header_t* h1=outputBam["IUM"].header();
+        if ((fpUM = samopen(outfile.c_str(), "wb", h1)) == 0) {
+            fprintf(stderr, "samopen: Fail to open output BAM file %s\n", filename.c_str());
+            exit(163);
+        }
     }
     
     if (outUniquePartialBam) {        
         string outfile=outputDirectory+"/"+filename+".uPart.bam";
         string sv=SpannerVersion;
         string q="@PG\tID:uniqPartiallyMappedPairs\tPN:SpannerX\tVN"+sv+"\tCL:"+Params.getCmdLine();
-        outputBam["UP"]=BamOutStream(outfile, q , bam_header);  
+        outputBam["UP"]=BamHeaderContainer(bam_header,q);  
+        bam_header_t* h1=outputBam["UP"].header();
+        if ((fpUP = samopen(outfile.c_str(), "wb", h1)) == 0) {
+            fprintf(stderr, "samopen: Fail to open output BAM file %s\n", filename.c_str());
+            exit(164);
+        }
     }
 
     if (outUniqueUnmappedBam) {        
         string outfile=outputDirectory+"/"+filename+".uUnmapped.bam";
         string sv=SpannerVersion;
         string q="@PG\tID:uniqUnMappedPairs\tPN:SpannerX\tVN"+sv+"\tCL:"+Params.getCmdLine();
-        outputBam["UZ"]=BamOutStream(outfile, q , bam_header);  
+        outputBam["UZ"]=BamHeaderContainer(bam_header,q); 
+        bam_header_t* h1=outputBam["UZ"].header();
+        if ((fpUZ = samopen(outfile.c_str(), "wb", h1)) == 0) {
+            fprintf(stderr, "samopen: Fail to open output BAM file %s\n", filename.c_str());
+            exit(165);
+        }
+
     }
 
     //region
@@ -152,57 +201,162 @@ BamX::BamX(pars & Params1)	// optional constructor
         //if (bampair.BamEnd[0].b.core.tid==bampair.BamEnd[1].b.core.tid) 
         //    cout<< bampair << endl;
         
-        if (outFragTailBam) { 
-            if ((bampair.BamEnd[0].q<Qmin)|(bampair.BamEnd[1].q<Qmin)) continue;
-            bool FT=(bampair.FragmentLength>LFhigh)|((bampair.FragmentLength<LFlow)&(bampair.FragmentLength>INT_MIN));
+        bool bothmap = ((bampair.BamEnd[0].b.core.flag&BAM_FUNMAP)==0)&&((bampair.BamEnd[0].b.core.flag&BAM_FMUNMAP)==0);
+        
+        bool ok[2];
+        for (char e=0; e<2; e++) {
+            uint8_t*  bq=bam1_qual(&(bampair.BamEnd[e].b));
+            int LR=bampair.BamEnd[0].b.core.l_qseq;
+            double bok=0;
+            for (int ib=0; ib<LR; ib++) {
+                if (bq[ib]>SplitBaseQmin) {
+                    bok++;
+                }
+            }
+            ok[e]=(bok>LRmin);
+        }
+        
+        if (! (ok[0]&ok[1]) )
+            continue;
+        
+        if ( (outFragTailBam) & ((bampair.BamEnd[0].q>=Qmin)|(bampair.BamEnd[1].q>=Qmin)) ) {            
+            bool FT=(bampair.FragmentLength>LFhigh)|((bampair.FragmentLength<LFlow)&(bampair.FragmentLength>INT_MIN))&bothmap;
             if (FT) {
-                outputBam["FT"].write(&(bampair.BamEnd[0].b),&(bampair.BamEnd[1].b));
+                int s1=samwrite(fpFT, &(bampair.BamEnd[0].b));
+                int s2=samwrite(fpFT, &(bampair.BamEnd[1].b));
+                //if (outputBam["FT"].write(&(bampair.BamEnd[0].b),&(bampair.BamEnd[1].b))) {
+                if ((s1*s2)>0) {
+                    continue;
+                } else {
+                    cerr << "bad write to fragtail.bam" << endl;
+                    exit(151);
+                }
             }
         }
-        if (outInterChromBam) { 
-            if ((bampair.BamEnd[0].q<Qmin)|(bampair.BamEnd[1].q<Qmin)) continue;
-            bool IC=(bampair.BamEnd[0].b.core.tid!=bampair.BamEnd[1].b.core.tid);
+        
+        if ((outInterChromBam) & ((bampair.BamEnd[0].q>=Qmin)&(bampair.BamEnd[1].q>=Qmin))) { 
+            bool IC=(bampair.BamEnd[0].b.core.tid!=bampair.BamEnd[1].b.core.tid)&&bothmap;
             if (IC) {
-                outputBam["IC"].write(&(bampair.BamEnd[0].b),&(bampair.BamEnd[1].b));
+                int s1=samwrite(fpIC, &(bampair.BamEnd[0].b));
+                int s2=samwrite(fpIC, &(bampair.BamEnd[1].b));
+                if ((s1*s2)>0) {
+                    continue;
+                } else {
+                    cerr << "bad write to interchrom.bam" << endl;
+                    exit(152);
+                }
             }
         }
-        if (outUniqueMultipleBam) { 
-            if ((bampair.BamEnd[0].q<Qmin)&(bampair.BamEnd[1].q<Qmin)) continue;            
-            bool UM=(bampair.BamEnd[0].nmap!=bampair.BamEnd[1].nmap);            
+        if ((outUniqueMultipleBam) & ((bampair.BamEnd[0].q>=Qmin)|(bampair.BamEnd[1].q>=Qmin))){
+            int im=bampair.BamEnd[0].nmap>1? 0: 1;
+            int iu=bampair.BamEnd[0].q>=Qmin? 0: 1;
+            bool UM=(bampair.BamEnd[iu].nmap>1)&&(iu!=im)&&bothmap;            
             if (UM) {
-                outputBam["UM"].write(&(bampair.BamEnd[0].b),&(bampair.BamEnd[1].b));
+                int s1=samwrite(fpUM, &(bampair.BamEnd[0].b));
+                int s2=samwrite(fpUM, &(bampair.BamEnd[1].b));
+                if ((s1*s2)>0) {
+                    continue;
+                } else {
+                    cerr << "bad write to uMult.bam" << endl;
+                    exit(153);
+                }
             }
         }
-        if (outUniquePartialBam) { 
-            if ((bampair.BamEnd[0].q<Qmin)|(bampair.BamEnd[1].q<Qmin)) continue;
+        if ( (outUniquePartialBam) && ((bampair.BamEnd[0].q>=Qmin)|(bampair.BamEnd[1].q>=Qmin)) && bothmap) {            
             int c0=bampair.BamEnd[0].clip[0]+bampair.BamEnd[0].clip[1];
-            int c1=bampair.BamEnd[0].clip[0]+bampair.BamEnd[0].clip[1];
-            if  (((c1>minLR)&(c0>minLR))|((c0<minLR)&(c1<minLR))) continue; 
-            bool UP=((c1+c0)>minLR);
+            int LR=bampair.BamEnd[0].b.core.l_qseq;
+            bool split0=((LR-c0)>SplitBracketMin)&(c0>SplitBracketMin);
+            int ib0=0;
+            if ((split0)&(bampair.BamEnd[0].clip[0]>SplitBracketMin)) {
+                ib0=bampair.BamEnd[0].clip[0];
+            } else if ((split0)&(bampair.BamEnd[0].clip[1]>SplitBracketMin) ) {
+                ib0=LR-bampair.BamEnd[0].clip[1];
+            }
+            split0=split0&(ib0>0);
+            if (split0) {
+                uint8_t*  bq=bam1_qual(&(bampair.BamEnd[0].b));
+                for (int ib=(ib0-SplitBracketMin); ib<(ib0+SplitBracketMin); ib++) {
+                    if (bq[ib]<SplitBaseQmin) {
+                        split0=false;
+                        break;
+                    }
+                }
+            }
+            
+            int c1=bampair.BamEnd[1].clip[0]+bampair.BamEnd[1].clip[1];
+            LR=bampair.BamEnd[1].b.core.l_qseq;
+            bool split1=((LR-c0)>SplitBracketMin)&(c1>SplitBracketMin);;
+            int ib1=0;
+            if ((split1)&(bampair.BamEnd[1].clip[0]>SplitBracketMin)) {
+                ib1=bampair.BamEnd[1].clip[0];
+            } else if ((split1)&(bampair.BamEnd[1].clip[1]>SplitBracketMin) ) {
+                ib1=LR-bampair.BamEnd[1].clip[1];
+            }
+            split1=split1&(ib1>0);
+            if (split1) {
+                uint8_t*  bq=bam1_qual(&(bampair.BamEnd[1].b));
+                for (int ib=(ib1-SplitBracketMin); ib<(ib1+SplitBracketMin); ib++) {
+                    if (bq[ib]<SplitBaseQmin) {
+                        split1=false;
+                        break;
+                    }
+                }
+            }
+            bool UP=(split0|split1)&((c1+c0)>minLR);
             if (UP) {
-                outputBam["UP"].write(&(bampair.BamEnd[0].b),&(bampair.BamEnd[1].b));
+                int s1=samwrite(fpUP, &(bampair.BamEnd[0].b));
+                int s2=samwrite(fpUP, &(bampair.BamEnd[1].b));
+                if ((s1*s2)>0) {
+                    continue;
+                } else {
+                    cerr << "bad write to uPart.bam" << endl;
+                    exit(154);
+                }
             }
         }
-        if (outUniqueUnmappedBam) { 
-            if ((bampair.BamEnd[0].q>Qmin)|(bampair.BamEnd[1].q>Qmin)) continue;
+        if ( (outUniqueUnmappedBam) & ((bampair.BamEnd[0].q>=Qmin)|(bampair.BamEnd[1].q>=Qmin)) ) {
             bool z0=((bampair.BamEnd[0].b.core.flag&BAM_FUNMAP)>0);
-            bool z1=((bampair.BamEnd[1].b.core.flag&BAM_FUNMAP)>0);            
+            bool z1=((bampair.BamEnd[1].b.core.flag&BAM_FUNMAP)>0);  
+            
+            
+            uint8_t*  bq=bam1_qual(&(bampair.BamEnd[0].b));
+            for (int nb,ib=0; ib<bampair.BamEnd[0].b.core.l_qseq; ib++) {
+                if (bq[ib]<SplitBaseQmin) {
+                    nb++;
+                }
+            }
+
+            
             bool UZ=(z0|z1)&(!(z1&z0));
             if (UZ) {
-                outputBam["UZ"].write(&(bampair.BamEnd[0].b),&(bampair.BamEnd[1].b));
+                int s1=samwrite(fpUZ, &(bampair.BamEnd[0].b));
+                int s2=samwrite(fpUZ, &(bampair.BamEnd[1].b));
+                if ((s1*s2)>0) {
+                    continue;
+                } else {
+                    cerr << "bad write to uUnmapped.bam" << endl;
+                    exit(155);
+                }
             }
         }
-      
+        
         
         //cout<< bampair.Orientation << "\t"<< bampair.FragmentLength << "\t" <<bampair.BamEnd[1].b.core.pos << endl;
         
     }
     
     
-    for (ioutputBam=outputBam.begin(); ioutputBam!=outputBam.end(); ioutputBam++) {
+    samclose(fpFT);
+    samclose(fpIC);    
+    samclose(fpUP);    
+    samclose(fpUM);
+    samclose(fpUZ);
+
+    /*
+     for (ioutputBam=outputBam.begin(); ioutputBam!=outputBam.end(); ioutputBam++) {
         (*ioutputBam).second.close();
     }
-    /*
+     
     if (FragmentTailPercent>0) 
         outputBam["FT"].close();
     */

@@ -38,7 +38,6 @@ int  calcReadLength(bam1_t *);
 
 
 
-
 class BamContainer
 {
     friend ostream &operator<<(ostream &, const BamContainer &);
@@ -59,38 +58,6 @@ public:
     int clip[2];                // clipped bases ends  5' [0] and 3' [1]  
 };
 
-/*
-// non-Bam mapped read record
-class SpanRead
-{
-    friend ostream &operator<<(ostream &, const SpanRead &);
-public:
-    int pos;           // position in contig (unpadded)
-    unsigned short len;         // length of this read aligment in contig coordinates
-    unsigned short anchor;      // anchor index  
-    char sense;                 // forward ('F') or reverse complement ('R')
-    char q;                     // mapping quality
-  	char q2;                    // mapping quality of next best alignment
-    unsigned short nmap;        // number of mappings for this read 
-    unsigned short mm;          // number of mismatches     
-  	char mob;                   // char for special contig hit
-  	string cigar;               // cigar
-    unsigned int flag;          // bam flag
-    unsigned int isize;         // bam isize
-    int clip[2];                // 5' and 3' clip
-    
-    SpanRead();  
-    SpanRead(const SpanRead &);  
-    SpanRead(int p, unsigned short l, unsigned short a, char s, char q,char q2, unsigned short n,unsigned short m);
-    SpanRead(bam1_t * );
-    SpanRead(BamContainer & );
-    ~SpanRead(){};  
-    SpanRead&operator=(const SpanRead &rhs);
-    int operator==(const SpanRead &rhs) const;
-    int operator<(const SpanRead &rhs) const;  
-    
-}; 
-*/
 
 class BamContainerPair
 {
@@ -123,6 +90,7 @@ public:
 
 };
 
+/*
 class BamOutStream 
 {
     
@@ -135,9 +103,45 @@ public:
     void close();
     string filename;
     string programgroup;
-    samfile_t* fp;
+    samfile_t *fp;
     bam_header_t *h;
-    bam1_t* b;
+    bam1_t *b;
+    int Npair;
+    int Nread;    
+};
+*/
+
+class BamHeaderContainer 
+{
+    
+public:
+    BamHeaderContainer();
+    BamHeaderContainer(bam_header_t *,string &);
+    BamHeaderContainer&operator=(const BamHeaderContainer &);
+    bam_header_t* header();
+    //bam_header_t h;
+    vector<string> target_name;
+    vector<uint32_t> target_len;
+    string text;
+    int32_t n_targets;
+    size_t l_text, n_text;    
+};
+
+class BamFileContainer 
+{
+    
+public:
+    BamFileContainer();
+    BamFileContainer(string &, string &,bam_header_t *);
+    BamFileContainer&operator=(const BamFileContainer &);
+    bool write(bam1_t *);
+    bool write(bam1_t *, bam1_t *);
+    void close();
+    samfile_t* fp();
+    string filename;
+    string programgroup;
+    samfile_t fp1;    
+    BamHeaderContainer h;
     int Npair;
     int Nread;    
 };
@@ -153,7 +157,7 @@ public:
     BamUtil(string &);
     BamContainerPair  getNextBamPair();
     list<BamContainer> getRemainingBamSingleEnds();
-    vector<BamOutStream> outputBam;
+    //vector<BamOutStream> outputBam;
     
     void extractMateMode();
     

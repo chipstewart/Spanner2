@@ -116,6 +116,8 @@ list<BamContainer> BamUtil::getRemainingBamSingleEnds()
     return bo;
 }
  
+/*
+ 
 BamOutStream::BamOutStream()
 {
     filename="";
@@ -129,7 +131,7 @@ BamOutStream::BamOutStream(string & f, string & r,bam_header_t *h0)
 {
     filename=f;
     programgroup=r;
-   
+    
     h = bam_header_init();
     *h = *h0;
     h->hash = h->dict = h->rg2lib = 0;
@@ -138,8 +140,8 @@ BamOutStream::BamOutStream(string & f, string & r,bam_header_t *h0)
     h->target_len = (uint32_t*)calloc(h->n_targets, 4);
     h->target_name = (char**)calloc(h->n_targets, sizeof(void*));
     for (int i = 0; i < h->n_targets; ++i) {
-      h->target_len[i] = h0->target_len[i];
-      h->target_name[i] = strdup(h0->target_name[i]);
+        h->target_len[i] = h0->target_len[i];
+        h->target_name[i] = strdup(h0->target_name[i]);
     }
     
     // add programgroup line to header
@@ -207,6 +209,154 @@ void BamOutStream::close()
     cout << "close " << filename << ":\t" << Npair << endl; 
     samclose(fp);
 }
+*/
+
+BamHeaderContainer::BamHeaderContainer()
+{
+    //&h=bam_header_init();
+    target_name.clear();
+    target_len.clear();
+    text="";
+    n_targets=0;
+    l_text=0;
+    n_text=0;
+};
+
+BamHeaderContainer::BamHeaderContainer(bam_header_t *h0, string & xtra)
+{
+    //header=bam_header_init();    
+    //header.hash = header.dict = header.rg2lib = 0;
+    l_text=h0->l_text;
+    //text.resize(l_text,0);
+    text.assign(h0->text, 0, h0->l_text);
+    
+    // add programgroup line to header
+    size_t l_xtra = xtra.size();
+    size_t x32 = h0->l_text + 1;
+    size_t y32 = h0->l_text + l_xtra + 1; // 1 byte null
+    kroundup32(x32); 
+    kroundup32(y32);    
+    text=text+xtra;
+    l_text += l_xtra;
+    text.resize(l_text,0);
+    if (x32 < y32) text.resize(y32,0);
+    //text[l_text] = 0;
+
+    // targets
+    n_targets=h0->n_targets;
+    target_len.resize(n_targets,0);
+    target_name.resize(n_targets,"*");
+    for (int i = 0; i < n_targets; ++i) {
+        target_len[i] = h0->target_len[i];
+        target_name[i] = strdup(h0->target_name[i]);
+    }
+    
+};
+
+
+BamHeaderContainer& BamHeaderContainer::operator=(const BamHeaderContainer &src)  
+{                   
+    //header=src.header;
+    target_name=src.target_name;
+    target_len=src.target_len;
+    text=src.text;
+    n_targets=src.n_targets;
+    l_text=src.l_text;
+    n_text=src.n_text;
+    return *this;
+}    
+    
+bam_header_t* BamHeaderContainer::header() 
+{
+    bam_header_t* h = bam_header_init();     
+    h->l_text = text.size();
+    h->text = &text[0];
+    h->n_targets=n_targets;
+    h->hash = h->dict = h->rg2lib = 0;
+    h->target_len = (uint32_t*)calloc(n_targets, 4);
+    h->target_name = (char**)calloc(n_targets, sizeof(void*));
+    for (int i = 0; i < n_targets; ++i) {
+        h->target_len[i] = target_len[i];
+        h->target_name[i] = &(target_name[i][0]);
+    }    
+    return h;
+}
+
+BamFileContainer::BamFileContainer()
+{
+    filename="";
+    programgroup="";
+    Npair=0;
+    Nread=0;    
+};
+
+BamFileContainer::BamFileContainer(string & f, string & r,bam_header_t *h0)
+{
+    filename=f;
+    programgroup=r;
+    h=BamHeaderContainer(h0,r); 
+    bam_header_t *h1=h.header();
+    samfile_t *fp0;
+    if ((fp0 = samopen(filename.c_str(), "wb", h1)) == 0) {
+		fprintf(stderr, "samopen: Fail to open output BAM file %s\n", filename.c_str());
+		exit(101);
+	}
+    //fp1=*fp0;
+    fp1.type=fp0->type;
+    fp1.x=fp0->x;
+    fp1.header=fp0->header;
+    Npair=0;
+    Nread=0;
+};
+
+BamFileContainer& BamFileContainer::operator=(const BamFileContainer &src)  
+{                   
+    filename=src.filename;
+    programgroup=src.programgroup;    
+    h = src.h;
+    fp1.type=src.fp1.type;
+    fp1.x=src.fp1.x;
+    fp1.header=src.fp1.header;
+    Npair=src.Npair;
+    Nread=src.Nread;
+    return *this;
+}
+
+samfile_t* BamFileContainer::fp() 
+{
+    samfile_t* fp0;
+    fp0->type = fp1.type;
+    fp0->x = fp1.x;
+    fp0->header = h.header();
+    return fp0;
+}
+
+
+bool BamFileContainer::write(bam1_t *b)
+{
+    Nread++;
+    samfile_t* fp0=fp();
+    return samwrite(fp0, b)>0;
+}
+
+bool BamFileContainer::write(bam1_t *b1, bam1_t *b2 )
+{
+    Nread++;
+    Nread++;
+    Npair++;
+    samfile_t* fp0=fp();
+    int s1=samwrite(fp0, b1);
+    int s2=samwrite(fp0, b2);
+    return (s2>0)&(s1>0);
+}
+
+void BamFileContainer::close()
+{
+    cout << "close " << filename << ":\t" << Npair << endl; 
+    samfile_t* fp0=fp();
+    samclose(fp0);
+}
+
 
 BamContainer::BamContainer()
 {
