@@ -324,7 +324,7 @@ BamFileContainer& BamFileContainer::operator=(const BamFileContainer &src)
 
 samfile_t* BamFileContainer::fp() 
 {
-    samfile_t* fp0;
+    samfile_t* fp0=0;
     fp0->type = fp1.type;
     fp0->x = fp1.x;
     fp0->header = h.header();
