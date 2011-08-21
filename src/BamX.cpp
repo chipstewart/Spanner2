@@ -99,11 +99,11 @@ BamX::BamX(pars & Params1)	// optional constructor
     cout << x.size() << endl;
     */
     
-    samfile_t *fpFT;
-    samfile_t *fpIC;
-    samfile_t *fpUM;
-    samfile_t *fpUP;
-    samfile_t *fpUZ;
+    samfile_t *fpFT=0;
+    samfile_t *fpIC=0;
+    samfile_t *fpUM=0;
+    samfile_t *fpUP=0;
+    samfile_t *fpUZ=0;
     
     if (outFragTailBam) {
         string outfile=outputDirectory+"/"+filename+".fragtail.bam";
@@ -204,7 +204,7 @@ BamX::BamX(pars & Params1)	// optional constructor
         bool bothmap = ((bampair.BamEnd[0].b.core.flag&BAM_FUNMAP)==0)&&((bampair.BamEnd[0].b.core.flag&BAM_FMUNMAP)==0);
         
         bool ok[2];
-        for (char e=0; e<2; e++) {
+        for (int e=0; e<2; e++) {
             uint8_t*  bq=bam1_qual(&(bampair.BamEnd[e].b));
             int LR=bampair.BamEnd[0].b.core.l_qseq;
             double bok=0;
@@ -221,7 +221,7 @@ BamX::BamX(pars & Params1)	// optional constructor
         
         if ( (outFragTailBam) & ((bampair.BamEnd[0].q>=Qmin)|(bampair.BamEnd[1].q>=Qmin)) ) {            
             bool FT=(bampair.FragmentLength>LFhigh)|((bampair.FragmentLength<LFlow)&(bampair.FragmentLength>INT_MIN))&bothmap;
-            if (FT) {
+            if (FT && (fpFT!=0)) {
                 int s1=samwrite(fpFT, &(bampair.BamEnd[0].b));
                 int s2=samwrite(fpFT, &(bampair.BamEnd[1].b));
                 //if (outputBam["FT"].write(&(bampair.BamEnd[0].b),&(bampair.BamEnd[1].b))) {
@@ -236,7 +236,7 @@ BamX::BamX(pars & Params1)	// optional constructor
         
         if ((outInterChromBam) & ((bampair.BamEnd[0].q>=Qmin)&(bampair.BamEnd[1].q>=Qmin))) { 
             bool IC=(bampair.BamEnd[0].b.core.tid!=bampair.BamEnd[1].b.core.tid)&&bothmap;
-            if (IC) {
+            if (IC && (fpIC!=0)) {
                 int s1=samwrite(fpIC, &(bampair.BamEnd[0].b));
                 int s2=samwrite(fpIC, &(bampair.BamEnd[1].b));
                 if ((s1*s2)>0) {
@@ -251,7 +251,7 @@ BamX::BamX(pars & Params1)	// optional constructor
             int im=bampair.BamEnd[0].nmap>1? 0: 1;
             int iu=bampair.BamEnd[0].q>=Qmin? 0: 1;
             bool UM=(bampair.BamEnd[iu].nmap>1)&&(iu!=im)&&bothmap;            
-            if (UM) {
+            if (UM && (fpUM!=0)) {
                 int s1=samwrite(fpUM, &(bampair.BamEnd[0].b));
                 int s2=samwrite(fpUM, &(bampair.BamEnd[1].b));
                 if ((s1*s2)>0) {
@@ -303,7 +303,7 @@ BamX::BamX(pars & Params1)	// optional constructor
                 }
             }
             bool UP=(split0|split1)&((c1+c0)>minLR);
-            if (UP) {
+            if (UP && (fpUP!=0)) {
                 int s1=samwrite(fpUP, &(bampair.BamEnd[0].b));
                 int s2=samwrite(fpUP, &(bampair.BamEnd[1].b));
                 if ((s1*s2)>0) {
@@ -328,7 +328,7 @@ BamX::BamX(pars & Params1)	// optional constructor
 
             
             bool UZ=(z0|z1)&(!(z1&z0));
-            if (UZ) {
+            if (UZ && (fpUZ!=0)) {
                 int s1=samwrite(fpUZ, &(bampair.BamEnd[0].b));
                 int s2=samwrite(fpUZ, &(bampair.BamEnd[1].b));
                 if ((s1*s2)>0) {
