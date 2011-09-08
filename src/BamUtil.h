@@ -86,8 +86,8 @@ public:
     bool UniquePartial;
     bool UniqueMultiple;
     bool UniqueUnique;
-    bool Inverted;    
-
+    bool Inverted;  
+ 
 };
 
 /*

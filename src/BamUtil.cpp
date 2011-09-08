@@ -716,6 +716,8 @@ ostream &operator<<(ostream &output, const BamContainerPair & x)
     return output;
 }
 
+
+
 //------------------------------------------------------------------------------
 // readmap (basic info for one read alignment)
 //------------------------------------------------------------------------------

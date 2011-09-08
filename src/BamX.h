@@ -68,6 +68,7 @@ public:
     bool outUniqueMultipleBam;
     bool outUniquePartialBam;
     bool outUniqueUnmappedBam;
+    bool outAllPairsBam; 
     
 }; // end class 
 

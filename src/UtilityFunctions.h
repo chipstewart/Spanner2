@@ -153,6 +153,7 @@ public:
     bool within(string &, int);
     bool within(string &, int,int);
     bool overlap(string &, int,int);
+    bool overlap(int, int,int);
     bool limit;
     string region;    
     string chrom;    

@@ -41,7 +41,8 @@ pars::pars(int argc,  char * argv[], string & cmdOpt1, string & inout1 )
     ints["Illuminize"]=1;
     ints["SplitBracketMin"]=20;   
     ints["SplitBaseQmin"]=20;   
-    
+    ints["All"]=1;
+         
     doubles["FragmentTailPercent"]=0.1;
     doubles["FractionMaxMisMatches"]=double(100.0);      
     
@@ -94,6 +95,7 @@ void pars::getCommandLineParameters(int argc, char * argv[])
         {"targetfile",             optional_argument, 0, 'T'},
         {"splitbracketmin",        optional_argument, 0, 'b'},
         {"splitbaseqmin",          optional_argument, 0, 'B'},
+        {"all",                    optional_argument, 0, 'A'},
         {"help",                   no_argument,       0, 'h'},
         {0, 0, 0, 0}
     };
@@ -248,6 +250,12 @@ void pars::getCommandLineParameters(int argc, char * argv[])
                 setInt("SpitBaseQmin",xi);
                 break;
                 
+            case 'A':
+                xs=optarg;
+                xi=string2Int(xs);
+                setInt("All",xi);
+                break;
+                
             case 'h':
                 help=true;
                 break;
@@ -379,6 +387,10 @@ void pars::getCommandLineParameters(int argc, char * argv[])
                         fprintf(stderr,"\t-%c: --%s :\t\t select target regions from file \n",long_options[o].val,long_options[o].name);
                         break;
                     
+                    case 'A':
+                        fprintf(stderr,"\t-%c: --%s :\t\t output all pairs from selected region  \n",long_options[o].val,long_options[o].name);
+                        break;
+                        
                     case 'h':
                         fprintf(stderr,"\t-%c: --%s :\t\t\t\t\t this message \n",long_options[o].val,long_options[o].name);
                         break;

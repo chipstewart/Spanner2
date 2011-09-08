@@ -545,6 +545,15 @@ bool C_region::overlap(string & c1, int p1, int p2) {
     return false;
 }
 
+bool C_region::overlap(int c1, int p1, int p2) {
+    if (anchor==c1) {
+        bool inside = (p1>=start)&(p2<=end);
+        bool over1 = (p1>=start)&(p1<=end);
+        bool over2 = (p2>=start)&(p2<=end);
+        return inside|over1|over2;
+    }
+    return false;
+}
 
 ostream & operator<<(ostream &output, const C_region & r1) {
     output << r1.region << endl;

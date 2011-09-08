@@ -24,7 +24,8 @@ BamX::BamX(pars & Params1)	// optional constructor
     outUniqueMultipleBam=false;
     outUniquePartialBam=false;
     outUniqueUnmappedBam=false;
- 
+    outAllPairsBam=false;
+    
     //output file
 	//samfile_t *fp;
     bam_header_t *bam_header;
@@ -75,11 +76,14 @@ BamX::BamX(pars & Params1)	// optional constructor
     string bamheadertext = bam_header->text;
     ReadGroup = extractBamTag(bamheadertext,"@RG");
     
-    outFragTailBam=FragmentTailPercent>0;
-    outInterChromBam=true;
-    outUniqueMultipleBam=true;
-    outUniquePartialBam=true;
-    outUniqueUnmappedBam=true;
+    outAllPairsBam=(r.size()>0);
+    if (!outAllPairsBam) { 
+        outFragTailBam=true; //FragmentTailPercent>=0;
+        outInterChromBam=true;
+        outUniqueMultipleBam=true;
+        outUniquePartialBam=true;
+        outUniqueUnmappedBam=true;
+    }
     // output Bams
     outputBam.clear();
     
@@ -104,6 +108,35 @@ BamX::BamX(pars & Params1)	// optional constructor
     samfile_t *fpUM=0;
     samfile_t *fpUP=0;
     samfile_t *fpUZ=0;
+    samfile_t *fpAP=0;
+    
+    //region
+    if (r.size()>0) {
+        int r1,r2,r3;
+        if ( bam_parse_region(bam_header, r.c_str(), &r1, &r2, &r3)==0) {
+            region.limit=true;
+            region.anchor=r1;
+            region.start=r2;
+            region.end=r3;
+        } else {
+            cerr << "region not found\t" << r << endl;
+            exit(111);
+        }
+        
+    }
+    
+    if (outAllPairsBam) {
+        string outfile=outputDirectory+"/"+filename+"."+r+".bam";
+        string sv=SpannerVersion;
+        string q="@PG\tID:Region\tPN:SpannerX\tVN"+sv+"\tCL:"+Params.getCmdLine();
+        outputBam["AP"]=BamHeaderContainer(bam_header,q); 
+        bam_header_t* h1=outputBam["AP"].header();
+        if ((fpFT = samopen(outfile.c_str(), "wb", h1)) == 0) {
+            fprintf(stderr, "samopen: Fail to open output BAM file %s\n", filename.c_str());
+            exit(160);
+        }
+    }
+
     
     if (outFragTailBam) {
         string outfile=outputDirectory+"/"+filename+".fragtail.bam";
@@ -166,20 +199,8 @@ BamX::BamX(pars & Params1)	// optional constructor
 
     }
 
-    //region
-    if (r.size()>0) {
-        int r1,r2,r3;
-        if ( bam_parse_region(bam_header, r.c_str(), &r1, &r2, &r3)==0) {
-            region.limit=true;
-            region.anchor=r1;
-            region.start=r2;
-            region.end=r3;
-        } else {
-            cerr << "region not found\t" << r << endl;
-            exit(111);
-        }
-        
-    }
+
+
     
     cout << ReadGroup << endl << endl;
     
@@ -193,6 +214,23 @@ BamX::BamX(pars & Params1)	// optional constructor
     while (more)
     {
         bampair=Bam.getNextBamPair();
+        // skip if neither end within region
+        more=(bampair.BamEnd.size()>1);
+        
+        if (!more) continue; 
+        if (region.limit) {
+            bool overlap = false;
+            for (int e=0; e<=1; e++) { 
+                int a1=bampair.BamEnd[e].b.core.tid;
+                int p1=bampair.BamEnd[e].b.core.pos;
+                int p2=p1+bampair.BamEnd[e].len;
+                overlap=region.overlap(a1,p1,p2);
+                if (overlap) break; 
+            }        
+            if (!overlap) continue;
+        }
+    
+        
         bampair.Illuminize(IlluminizeBam);  
         bampair.calcFragmentLengths();
         Npair++;
@@ -203,6 +241,19 @@ BamX::BamX(pars & Params1)	// optional constructor
         
         bool bothmap = ((bampair.BamEnd[0].b.core.flag&BAM_FUNMAP)==0)&&((bampair.BamEnd[0].b.core.flag&BAM_FMUNMAP)==0);
         
+        // 
+        
+        if (outAllPairsBam) {
+            int s1=samwrite(fpAP, &(bampair.BamEnd[0].b));
+            int s2=samwrite(fpAP, &(bampair.BamEnd[1].b));
+            if ((s1*s2)>0) {
+                continue;
+            } else {
+                cerr << "bad write to pairs.bam" << endl;
+                exit(150);
+            }
+        }
+            
         bool ok[2];
         for (int e=0; e<2; e++) {
             uint8_t*  bq=bam1_qual(&(bampair.BamEnd[e].b));
@@ -345,13 +396,16 @@ BamX::BamX(pars & Params1)	// optional constructor
         
     }
     
+    if (outAllPairsBam) {
+        samclose(fpAP);
+    } else {        
+        samclose(fpFT);
+        samclose(fpIC);    
+        samclose(fpUP);    
+        samclose(fpUM);
+        samclose(fpUZ);
+    };
     
-    samclose(fpFT);
-    samclose(fpIC);    
-    samclose(fpUP);    
-    samclose(fpUM);
-    samclose(fpUZ);
-
     /*
      for (ioutputBam=outputBam.begin(); ioutputBam!=outputBam.end(); ioutputBam++) {
         (*ioutputBam).second.close();
