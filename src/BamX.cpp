@@ -131,7 +131,7 @@ BamX::BamX(pars & Params1)	// optional constructor
         string q="@PG\tID:Region\tPN:SpannerX\tVN"+sv+"\tCL:"+Params.getCmdLine();
         outputBam["AP"]=BamHeaderContainer(bam_header,q); 
         bam_header_t* h1=outputBam["AP"].header();
-        if ((fpFT = samopen(outfile.c_str(), "wb", h1)) == 0) {
+        if ((fpAP = samopen(outfile.c_str(), "wb", h1)) == 0) {
             fprintf(stderr, "samopen: Fail to open output BAM file %s\n", filename.c_str());
             exit(160);
         }
