@@ -1,2 +1,2 @@
-#define SpannerVersion "2.01"
+#define SpannerVersion "2.02"
 

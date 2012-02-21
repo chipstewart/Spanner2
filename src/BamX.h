@@ -27,9 +27,8 @@
 #include "FastaFile.h"
 #include "sam.h"
 #include "BamUtil.h"
+#include "FragmentPosFile.h"
 
-
-//using namespace re2;
 using namespace std;
 
 class BamX
@@ -62,6 +61,7 @@ public:
     C_region region;
     double FragmentTailPercent;
     string outputDirectory;
+    FragmentPosFileObj FragPos;
     
     bool outFragTailBam;
     bool outInterChromBam;
@@ -69,6 +69,7 @@ public:
     bool outUniquePartialBam;
     bool outUniqueUnmappedBam;
     bool outAllPairsBam; 
+    bool outReadPairPosBam; 
     
 }; // end class 
 

@@ -15,7 +15,7 @@
 int main (int argc, char * argv[])
 {        
     // options for BamX
-    string cmdOpt="mo:P:S:x:c:d:r:q:p:l:t:h:Ib:B:A";
+    string cmdOpt="mo:R:P:S:x:c:d:r:q:p:l:t:h:Ib:B:A";
     string inputoutput ="SpannerX [-options] -o <outputdir>  <input bam file>  >  stdout ";
     pars Params(argc,argv,cmdOpt,inputoutput);
 

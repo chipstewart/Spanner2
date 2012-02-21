@@ -50,6 +50,7 @@ pars::pars(int argc,  char * argv[], string & cmdOpt1, string & inout1 )
     strings["ReferenceFastaFile"]="";
     strings["ChromRegion"]="";
     strings["TargetFile"]="";
+    strings["ReadPairPosFile"]="";
  
     histos["LF"]=hist();
     histos["LR"]=hist();
@@ -93,6 +94,7 @@ void pars::getCommandLineParameters(int argc, char * argv[])
         {"minreadlength",          optional_argument, 0, 'l'},
         {"technology_matemode",    optional_argument, 0, 't'},
         {"targetfile",             optional_argument, 0, 'T'},
+        {"readpairposfile",        optional_argument, 0, 'R'},
         {"splitbracketmin",        optional_argument, 0, 'b'},
         {"splitbaseqmin",          optional_argument, 0, 'B'},
         {"all",                    optional_argument, 0, 'A'},
@@ -236,6 +238,12 @@ void pars::getCommandLineParameters(int argc, char * argv[])
                 //fprintf(stderr,"option -T with value `%s'\n", optarg);
                 xs=optarg;
                 setString("TargetFile",xs);
+                break;
+                
+            case 'R':
+                //fprintf(stderr,"option -R with value `%s'\n", optarg);
+                xs=optarg;
+                setString("ReadPairPosFile",xs);
                 break;
                 
             case 'b':
@@ -386,7 +394,11 @@ void pars::getCommandLineParameters(int argc, char * argv[])
                     case 'T':
                         fprintf(stderr,"\t-%c: --%s :\t\t select target regions from file \n",long_options[o].val,long_options[o].name);
                         break;
-                    
+
+                    case 'R':
+                        fprintf(stderr,"\t-%c: --%s :\t\t select read positions from file \n",long_options[o].val,long_options[o].name);
+                        break;
+                        
                     case 'A':
                         fprintf(stderr,"\t-%c: --%s :\t\t output all pairs from selected region  \n",long_options[o].val,long_options[o].name);
                         break;

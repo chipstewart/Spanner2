@@ -25,6 +25,7 @@ BamX::BamX(pars & Params1)	// optional constructor
     outUniquePartialBam=false;
     outUniqueUnmappedBam=false;
     outAllPairsBam=false;
+    outReadPairPosBam=false;
     
     //output file
 	//samfile_t *fp;
@@ -37,6 +38,7 @@ BamX::BamX(pars & Params1)	// optional constructor
     string filename=extractfilename(s);
     
     // parameters
+    string fragPosFile = Params.getString("ReadPairPosFile");
     string r = Params.getString("ChromRegion");
     int maxReads = Params.getInt("MaxReads");
     Qmin = Params.getInt("Qmin");
@@ -109,6 +111,7 @@ BamX::BamX(pars & Params1)	// optional constructor
     samfile_t *fpUP=0;
     samfile_t *fpUZ=0;
     samfile_t *fpAP=0;
+    samfile_t *fpWP=0;
     
     //region
     if (r.size()>0) {
@@ -124,6 +127,27 @@ BamX::BamX(pars & Params1)	// optional constructor
         }
         
     }
+    
+    
+    //fragPosFile
+    if (fragPosFile.size()>0) {
+        
+        FragmentPosFileObj fp(fragPosFile);
+        if (fp.fragmentPosList.size()>0) {
+            FragPos=fp;
+        } else {
+            cerr << "Read Pair Pos file not found\t" <<  fragPosFile << endl;
+            exit(112);
+        }
+        outFragTailBam=false; 
+        outInterChromBam=false;
+        outUniqueMultipleBam=false;
+        outUniquePartialBam=false;
+        outUniqueUnmappedBam=false;
+        outReadPairPosBam=true;
+        
+    }
+
     
     if (outAllPairsBam) {
         string outfile=outputDirectory+"/"+filename+"."+r+".bam";
@@ -199,7 +223,18 @@ BamX::BamX(pars & Params1)	// optional constructor
 
     }
 
-
+    if (outReadPairPosBam) {        
+        string outfile=outputDirectory+"/"+filename+".weirdpairs.bam";
+        string sv=SpannerVersion;
+        string q="@PG\tID:weirdpairs\tPN:SpannerX\tVN"+sv+"\tCL:"+Params.getCmdLine();
+        outputBam["WP"]=BamHeaderContainer(bam_header,q); 
+        bam_header_t* h1=outputBam["WP"].header();
+        if ((fpWP = samopen(outfile.c_str(), "wb", h1)) == 0) {
+            fprintf(stderr, "samopen: Fail to open output BAM file %s\n", filename.c_str());
+            exit(165);
+        }
+        
+    }
 
     
     cout << ReadGroup << endl << endl;
@@ -253,7 +288,32 @@ BamX::BamX(pars & Params1)	// optional constructor
                 exit(150);
             }
         }
-            
+
+        
+        if (outReadPairPosBam) {
+            int ichr1=bampair.BamEnd[0].b.core.tid+1;
+            int istd1=bampair.BamEnd[0].sense=='+'? 0: 1;
+            int ista1=bampair.BamEnd[0].b.core.pos;
+            int iq1=bampair.BamEnd[0].q;
+            int ichr2=bampair.BamEnd[1].b.core.tid+1;
+            int istd2=bampair.BamEnd[1].sense=='+'? 0: 1;
+            int ista2=bampair.BamEnd[1].b.core.pos;
+            int iq2=bampair.BamEnd[1].q;
+            if (ista1==14879) {
+                cout << endl;
+            }
+            FragmentPosObj  fp1(0,ichr1,istd1,ista1,0,ichr2,istd2,ista2,0,iq1, iq2,0);
+            if (FragPos.find(fp1)) {
+                int s1=samwrite(fpWP, &(bampair.BamEnd[0].b));
+                int s2=samwrite(fpWP, &(bampair.BamEnd[1].b));
+                if ((s1*s2)>0) {
+                    continue;
+                } else {
+                    cerr << "bad write to weirdpairs.bam" << endl;
+                    exit(156);
+                }
+            }
+        }        
         bool ok[2];
         for (int e=0; e<2; e++) {
             uint8_t*  bq=bam1_qual(&(bampair.BamEnd[e].b));
