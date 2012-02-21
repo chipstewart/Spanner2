@@ -47,6 +47,7 @@ public:
     int Nread;
     int Npair;
     int Nproper;
+    int Nout;
     string ReadGroup;
     hists Histos;
     char  MateMode;
@@ -70,6 +71,10 @@ public:
     bool outUniqueUnmappedBam;
     bool outAllPairsBam; 
     bool outReadPairPosBam; 
+    
+    time_t tprev, tnow;
+	float elapsedtime();
+    
     
 }; // end class 
 

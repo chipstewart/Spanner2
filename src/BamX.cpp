@@ -14,6 +14,7 @@ BamX::BamX(pars & Params1)	// optional constructor
     Nread=0;
     Npair=0;
     Nproper=0;
+    Nout=0;
     LFlow=INT_MIN;
     LFhigh=INT_MAX;
     region.limit=false;
@@ -67,7 +68,9 @@ BamX::BamX(pars & Params1)	// optional constructor
             LFhigh=int(HLF.p2xTrim(1-FragmentTailPercent/100.));   
         }
     }
-
+    
+    int dbg = Params.getInt("Dbg");
+   
     if (ReferenceFastaFile.size()>0) {
         FastaObj RF1(ReferenceFastaFile, "");
         Reference=RF1;
@@ -276,9 +279,14 @@ BamX::BamX(pars & Params1)	// optional constructor
         
         bool bothmap = ((bampair.BamEnd[0].b.core.flag&BAM_FUNMAP)==0)&&((bampair.BamEnd[0].b.core.flag&BAM_FMUNMAP)==0);
         
-        // 
+        //
+        if ( (dbg!=0)&&(elapsedtime()>float(dbg))) {
+			time(&tprev);
+			cout << Npair << "\t" << Nout << endl;			
+		}      
         
         if (outAllPairsBam) {
+            Nout++;
             int s1=samwrite(fpAP, &(bampair.BamEnd[0].b));
             int s2=samwrite(fpAP, &(bampair.BamEnd[1].b));
             if ((s1*s2)>0) {
@@ -299,11 +307,10 @@ BamX::BamX(pars & Params1)	// optional constructor
             int istd2=bampair.BamEnd[1].sense=='+'? 0: 1;
             int ista2=bampair.BamEnd[1].b.core.pos;
             int iq2=bampair.BamEnd[1].q;
-            if (ista1==14879) {
-                cout << endl;
-            }
+
             FragmentPosObj  fp1(0,ichr1,istd1,ista1,0,ichr2,istd2,ista2,0,iq1, iq2,0);
             if (FragPos.find(fp1)) {
+                Nout++;
                 int s1=samwrite(fpWP, &(bampair.BamEnd[0].b));
                 int s2=samwrite(fpWP, &(bampair.BamEnd[1].b));
                 if ((s1*s2)>0) {
@@ -333,6 +340,7 @@ BamX::BamX(pars & Params1)	// optional constructor
         if ( (outFragTailBam) & ((bampair.BamEnd[0].q>=Qmin)|(bampair.BamEnd[1].q>=Qmin)) ) {            
             bool FT=(bampair.FragmentLength>LFhigh)|((bampair.FragmentLength<LFlow)&(bampair.FragmentLength>INT_MIN))&bothmap;
             if (FT && (fpFT!=0)) {
+                Nout++;
                 int s1=samwrite(fpFT, &(bampair.BamEnd[0].b));
                 int s2=samwrite(fpFT, &(bampair.BamEnd[1].b));
                 //if (outputBam["FT"].write(&(bampair.BamEnd[0].b),&(bampair.BamEnd[1].b))) {
@@ -348,6 +356,7 @@ BamX::BamX(pars & Params1)	// optional constructor
         if ((outInterChromBam) & ((bampair.BamEnd[0].q>=Qmin)&(bampair.BamEnd[1].q>=Qmin))) { 
             bool IC=(bampair.BamEnd[0].b.core.tid!=bampair.BamEnd[1].b.core.tid)&&bothmap;
             if (IC && (fpIC!=0)) {
+                Nout++;
                 int s1=samwrite(fpIC, &(bampair.BamEnd[0].b));
                 int s2=samwrite(fpIC, &(bampair.BamEnd[1].b));
                 if ((s1*s2)>0) {
@@ -363,6 +372,7 @@ BamX::BamX(pars & Params1)	// optional constructor
             int iu=bampair.BamEnd[0].q>=Qmin? 0: 1;
             bool UM=(bampair.BamEnd[iu].nmap>1)&&(iu!=im)&&bothmap;            
             if (UM && (fpUM!=0)) {
+                Nout++;
                 int s1=samwrite(fpUM, &(bampair.BamEnd[0].b));
                 int s2=samwrite(fpUM, &(bampair.BamEnd[1].b));
                 if ((s1*s2)>0) {
@@ -415,6 +425,7 @@ BamX::BamX(pars & Params1)	// optional constructor
             }
             bool UP=(split0|split1)&((c1+c0)>minLR);
             if (UP && (fpUP!=0)) {
+                Nout++;
                 int s1=samwrite(fpUP, &(bampair.BamEnd[0].b));
                 int s2=samwrite(fpUP, &(bampair.BamEnd[1].b));
                 if ((s1*s2)>0) {
@@ -440,6 +451,7 @@ BamX::BamX(pars & Params1)	// optional constructor
             
             bool UZ=(z0|z1)&(!(z1&z0));
             if (UZ && (fpUZ!=0)) {
+                Nout++;
                 int s1=samwrite(fpUZ, &(bampair.BamEnd[0].b));
                 int s2=samwrite(fpUZ, &(bampair.BamEnd[1].b));
                 if ((s1*s2)>0) {
@@ -484,5 +496,12 @@ BamX::BamX(pars & Params1)	// optional constructor
     
 }
 
+float BamX::elapsedtime() {
+    time_t t;
+    time(&t);
+    float et = difftime (t,tprev);
+    //float et=float(t-tprev)*1.0/float(CLOCKS_PER_SEC);
+    return et;
+}
 
 
