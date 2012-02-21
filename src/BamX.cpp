@@ -70,7 +70,8 @@ BamX::BamX(pars & Params1)	// optional constructor
     }
     
     int dbg = Params.getInt("Dbg");
-   
+    time(&tprev);
+    
     if (ReferenceFastaFile.size()>0) {
         FastaObj RF1(ReferenceFastaFile, "");
         Reference=RF1;
