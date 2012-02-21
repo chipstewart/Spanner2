@@ -456,15 +456,19 @@ BamX::BamX(pars & Params1)	// optional constructor
         
     }
     
-    if (outAllPairsBam) {
-        samclose(fpAP);
+    if (outReadPairPosBam) {
+        samclose(fpWP);
     } else {        
-        samclose(fpFT);
-        samclose(fpIC);    
-        samclose(fpUP);    
-        samclose(fpUM);
-        samclose(fpUZ);
-    };
+        if (outAllPairsBam) {
+            samclose(fpAP);
+        } else {       
+            samclose(fpFT);
+            samclose(fpIC);    
+            samclose(fpUP);    
+            samclose(fpUM);
+            samclose(fpUZ);
+        }
+    }
     
     /*
      for (ioutputBam=outputBam.begin(); ioutputBam!=outputBam.end(); ioutputBam++) {
