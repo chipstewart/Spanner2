@@ -256,6 +256,18 @@ BamX::BamX(pars & Params1)	// optional constructor
         // skip if neither end within region
         more=(bampair.BamEnd.size()>1);
         
+        Npair++;
+        if (Npair>=maxReads) break; 
+
+        //
+        if ( (dbg!=0)&&(elapsedtime()>float(dbg))) {
+			time(&tprev);
+			cout << " pairs:" << Npair << "\toutput:" << Nout;
+			cout << "\tchr:" << bampair.BamEnd[0].b.core.tid+1;
+            cout << "\tpos:" << bampair.BamEnd[0].b.core.pos;
+            cout << endl;			
+		}  
+        
         if (!more) continue; 
         if (region.limit) {
             bool overlap = false;
@@ -272,19 +284,12 @@ BamX::BamX(pars & Params1)	// optional constructor
         
         bampair.Illuminize(IlluminizeBam);  
         bampair.calcFragmentLengths();
-        Npair++;
-        if (Npair>=maxReads) break; 
         more=(bampair.BamEnd[1].packeddata.size()>1);
         //if (bampair.BamEnd[0].b.core.tid==bampair.BamEnd[1].b.core.tid) 
         //    cout<< bampair << endl;
         
         bool bothmap = ((bampair.BamEnd[0].b.core.flag&BAM_FUNMAP)==0)&&((bampair.BamEnd[0].b.core.flag&BAM_FMUNMAP)==0);
-        
-        //
-        if ( (dbg!=0)&&(elapsedtime()>float(dbg))) {
-			time(&tprev);
-			cout << Npair << "\t" << Nout << endl;			
-		}      
+            
         
         if (outAllPairsBam) {
             Nout++;
