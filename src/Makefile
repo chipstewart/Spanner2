@@ -11,7 +11,7 @@ INCLUDES = -I$(SRC_DIR) -I$(SAMTOOLS_DIR)
 # ----------------------------------
 # define our source and object files
 # ----------------------------------
-SOURCES= BamScan.cpp Histo.cpp BamUtil.cpp FastaFile.cpp Pars.cpp UtilityFunctions.cpp BamX.cpp
+SOURCES= BamScan.cpp Histo.cpp BamUtil.cpp FastaFile.cpp Pars.cpp UtilityFunctions.cpp BamX.cpp FragmentPosFile.cpp
 OBJECTS= $(SOURCES:.cpp=.o)
 BUILT_OBJECTS= $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS))
 

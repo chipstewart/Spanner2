@@ -5,7 +5,7 @@
 
 SOURCES= SpannerX.cpp
 OBJECTS= $(SOURCES:.cpp=.o)
-_EXT_OBJECTS=BamScan.o FastaFile.o Pars.o BamUtil.o Histo.o UtilityFunctions.o BamX.o
+_EXT_OBJECTS=BamScan.o FastaFile.o Pars.o BamUtil.o Histo.o UtilityFunctions.o BamX.o FragmentPosFile.o
 
 EXT_OBJECTS=$(patsubst %,$(OBJ_DIR)/%,$(_EXT_OBJECTS))
 BUILT_OBJECTS= $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS))
