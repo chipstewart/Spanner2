@@ -119,6 +119,14 @@ int FragmentPosObj::operator<(const FragmentPosObj &rhs) const
     return 0;
 }
 
+
+ostream & operator<<(ostream &output, const FragmentPosObj & fp1) {
+    output << "chr" << fp1.chr1 << ":" << fp1.start1 <<"-"<< fp1.end1 << endl;
+    return output;
+};
+
+
+
 FragmentPosFileObj::FragmentPosFileObj()
 {
     this->posfile="";

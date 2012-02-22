@@ -271,7 +271,7 @@ BamX::BamX(pars & Params1)	// optional constructor
         if (!more) continue; 
         if (region.limit) {
             bool overlap = false;
-            for (int e=0; e<=1; e++) { 
+            for (int e=0; e<=1; e++) {                 
                 int a1=bampair.BamEnd[e].b.core.tid;
                 int p1=bampair.BamEnd[e].b.core.pos;
                 int p2=p1+bampair.BamEnd[e].len;
@@ -315,6 +315,11 @@ BamX::BamX(pars & Params1)	// optional constructor
             int iq2=bampair.BamEnd[1].q;
             
             FragmentPosObj  fp1(0,ichr1,istd1,ista1,0,ichr2,istd2,ista2,0,iq1, iq2,0);
+            
+            if ((fp1.chr1==10)&&(fp1.start1>=89687801)&&(fp1.end1<=89700722)) {
+                cout << "read "<< fp1 << endl;                
+            }
+            
             if (FragPos.find(fp1)) {
                 Nout++;
                 int s1=samwrite(fpWP, &(bampair.BamEnd[0].b));
