@@ -307,13 +307,13 @@ BamX::BamX(pars & Params1)	// optional constructor
         if (outReadPairPosBam) {
             int ichr1=bampair.BamEnd[0].b.core.tid+1;
             int istd1=bampair.BamEnd[0].sense=='+'? 0: 1;
-            int ista1=bampair.BamEnd[0].b.core.pos;
+            int ista1=bampair.BamEnd[0].b.core.pos+1;
             int iq1=bampair.BamEnd[0].q;
             int ichr2=bampair.BamEnd[1].b.core.tid+1;
             int istd2=bampair.BamEnd[1].sense=='+'? 0: 1;
-            int ista2=bampair.BamEnd[1].b.core.pos;
+            int ista2=bampair.BamEnd[1].b.core.pos+1;
             int iq2=bampair.BamEnd[1].q;
-
+            
             FragmentPosObj  fp1(0,ichr1,istd1,ista1,0,ichr2,istd2,ista2,0,iq1, iq2,0);
             if (FragPos.find(fp1)) {
                 Nout++;
