@@ -26,6 +26,8 @@ using namespace std;
 // single fragment class Contig class 
 class FragmentPosObj
 {
+friend ostream &operator<<(ostream &, const FragmentPosObj &);
+    
 public:
     FragmentPosObj();
     FragmentPosObj( int inum, int ichr1, int istd1, int ista1, int iend1,  int ichr2, int istr2, int ista2, int iend2, int iq1, int iq2, int ifle); 
