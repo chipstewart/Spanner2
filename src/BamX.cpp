@@ -316,10 +316,11 @@ BamX::BamX(pars & Params1)	// optional constructor
             
             FragmentPosObj  fp1(0,ichr1,istd1,ista1,0,ichr2,istd2,ista2,0,iq1, iq2,0);
             
-            if ((fp1.chr1==10)&&(fp1.start1>=89687801)&&(fp1.end1<=89700722)) {
+            /*
+             if ((fp1.chr1==10)&&(fp1.start1>=89687801)&&(fp1.end1<=89700722)) {
                 cout << "read "<< fp1 << endl;                
             }
-            
+            */
             if (FragPos.find(fp1)) {
                 Nout++;
                 int s1=samwrite(fpWP, &(bampair.BamEnd[0].b));
