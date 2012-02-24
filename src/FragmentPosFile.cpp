@@ -131,6 +131,9 @@ FragmentPosFileObj::FragmentPosFileObj()
 {
     this->posfile="";
     fragmentPosList.clear();
+    fragmentPosList.reserve(1000);
+    fragmentPosList.resize(1000);
+
 }
 //---------------------------------------------------------------------------------
 // FastaObj is the container class for a Fasta file sequence 
@@ -146,7 +149,10 @@ FragmentPosFileObj::FragmentPosFileObj(const string & fn)
     // input line
     string line;
     
-    
+    // enough for 1000 contigs
+    fragmentPosList.reserve(1000);
+    fragmentPosList.resize(1000);
+    int chr1Max=0;
     //----------------------------------------------------------------------------
     // input Frag Pos file
     //----------------------------------------------------------------------------
@@ -173,38 +179,36 @@ FragmentPosFileObj::FragmentPosFileObj(const string & fn)
         
         vector<string> s1;
         int ns= split(s1 , line, " \t"); 
-        if (ns==12) {
-            
+        if (ns==12) {            
             FragmentPosObj fp1(s1);
-            /*
-            int inum=string2Int(s1[0]);
-            int ichr1=string2Int(s1[1]);
-            int istd1=string2Int(s1[2]);
-            int ista1=string2Int(s1[3]);
-            int iend1=string2Int(s1[4]);
-            int ichr2=string2Int(s1[5]);
-            int istr2=string2Int(s1[6]);
-            int ista2=string2Int(s1[7]);
-            int iend2=string2Int(s1[8]);
-            int iq1=string2Int(s1[9]);
-            int iq2=string2Int(s1[10]);
-            int ifle=string2Int(s1[11]);            
-            
-            FragmentPosObj fp1(inum, ichr1, istd1, ista1, iend1, ichr2,  istr2, ista2, iend2,  iq1, iq2,  ifle);
-            */
-            fragmentPosList.push_back (fp1);
+            int ichr1=string2Int(s1[1])-1;
+            chr1Max= ichr1>chr1Max ?  ichr1 : chr1Max;
+            fragmentPosList[ichr1].push_back (fp1);
         }
         
     }
+    
+        
+    fragmentPosList.resize(chr1Max+1);
     //fragmentPosList.sort();
-    sort(fragmentPosList.begin(),fragmentPosList.end());
+  
+    for (int a=0; a<chr1Max; a++) { 
+        /*
+        cout << a+1<< endl;
+        for (int e=0; e<fragmentPosList[a].size(); e++) { 
+            cout << fragmentPosList[a][e];
+        }
+        */
+        sort(fragmentPosList[a].begin(),fragmentPosList[a].end());        
+    }
     
 }
 
 int FragmentPosFileObj::find(const FragmentPosObj & fp1)
 {
     
-    if (binary_search  (fragmentPosList.begin(), fragmentPosList.end(), fp1)) {
+    int a = fp1.chr1-1;
+    if (binary_search  (fragmentPosList[a].begin(), fragmentPosList[a].end(), fp1)) {
         cout << "found!\n"; 
         return 1;
     } 

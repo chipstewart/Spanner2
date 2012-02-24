@@ -56,8 +56,9 @@ class FragmentPosFileObj
 public:
     FragmentPosFileObj();
     FragmentPosFileObj( const string &);
-    vector<FragmentPosObj> fragmentPosList;
+    vector<vector<FragmentPosObj> > fragmentPosList;
     string posfile;
+
     int find(const FragmentPosObj &);
 }; // end class 
 
