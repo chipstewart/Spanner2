@@ -508,6 +508,10 @@ C_region::C_region(string & r) {
         }
         start=atoi(s.c_str());
         end=atoi(e.c_str());
+        
+    } else {
+        start=1;
+        end=100000000000;
     }
 }
 
