@@ -120,7 +120,15 @@ BamX::BamX(pars & Params1)	// optional constructor
     //region
     if (r.size()>0) {
         int r1,r2,r3;
-        if ( bam_parse_region(bam_header, r.c_str(), &r1, &r2, &r3)==0) {
+        C_region r0(r); 
+        region=r0;
+        string bamRegion=region.region;
+        size_t k=bamRegion.find("chr");
+        if (k!=string::npos) {
+            bamRegion=bamRegion.substr(3);
+        }
+
+        if ( bam_parse_region(bam_header, bamRegion.c_str(), &r1, &r2, &r3)==0) {
             region.limit=true;
             region.anchor=r1;
             region.start=r2;

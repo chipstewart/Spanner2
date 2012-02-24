@@ -469,7 +469,7 @@ C_region::C_region() {
     chrom="";    
     anchor=0;
     start=0;
-    end=0;
+    end=INT_MAX;
 }
 
 C_region::C_region(string & r) {
@@ -509,10 +509,7 @@ C_region::C_region(string & r) {
         start=atoi(s.c_str());
         end=atoi(e.c_str());
         
-    } else {
-        start=1;
-        end=1000000000;
-    }
+    } 
 }
 
 bool C_region::within(string & c1, int p1) {
