@@ -511,7 +511,7 @@ C_region::C_region(string & r) {
         
     } else {
         start=1;
-        end=100000000000;
+        end=1000000000;
     }
 }
 
