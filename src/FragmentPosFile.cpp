@@ -209,7 +209,7 @@ int FragmentPosFileObj::find(const FragmentPosObj & fp1)
     
     int a = fp1.chr1-1;
     if (binary_search  (fragmentPosList[a].begin(), fragmentPosList[a].end(), fp1)) {
-        cout << "found!\n"; 
+        //cout << "found!\n"; 
         return 1;
     } 
     return 0;        
